@@ -1,0 +1,18 @@
+{
+  "min_age": 21,
+  "max_age": 65,
+  "min_monthly_income_inr": 15000,
+  "min_credit_score": 600,
+  "max_loan_to_income_ratio": 30,
+  "max_emi_to_income_ratio": 0.5,
+  "allowed_country_bbox": {"lat_min": 6.0, "lat_max": 38.0, "lng_min": 68.0, "lng_max": 98.0},
+  "excluded_pin_prefixes": ["999"],
+  "max_dpd_30plus_last_12mo": 2,
+  "min_employment_months": 6,
+  "interest_rate_bands": {
+    "low_risk":      {"min": 9.99,  "max": 11.50},
+    "moderate_risk": {"min": 11.51, "max": 13.50},
+    "high_risk":     {"min": 13.51, "max": 16.00}
+  },
+  "tenure_options_months": [12, 24, 36, 48, 60]
+}

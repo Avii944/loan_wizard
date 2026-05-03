@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Pre-call checks{% endblock %}
+{% block body %}
+<div class="container narrow">
+  <h1>Pre-call checks</h1>
+  <p class="muted">Session ID <code>{{ sid }}</code> — we need three permissions before the call starts.</p>
+
+  <div class="card">
+    <div id="perm-camera"  class="permission"><div class="ic">📹</div><div class="info"><b>Camera + microphone</b><div class="status">checking…</div></div></div>
+    <div id="perm-geo"     class="permission"><div class="ic">📍</div><div class="info"><b>Geo-location</b><div class="status">checking…</div></div></div>
+    <div id="perm-device"  class="permission"><div class="ic">🛡️</div><div class="info"><b>Device + browser metadata</b><div class="status">capturing…</div></div></div>
+    <div class="row between" style="margin-top: 18px">
+      <span class="tiny">Captured before any conversation starts. Stored in the audit log.</span>
+      <button class="btn primary" id="continueBtn" disabled>Continue to call →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SID = "{{ sid }}";
+const NEXT_URL = "{{ url_for('video_session', sid=sid) }}";
+
+function setStatus(elId, ok, msg) {
+  const el = document.getElementById(elId);
+  el.classList.remove('ok', 'fail');
+  el.classList.add(ok ? 'ok' : 'fail');
+  el.querySelector('.status').textContent = msg;
+}
+
+async function checkCamera() {
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    s.getTracks().forEach(t => t.stop());
+    setStatus('perm-camera', true, 'Granted');
+    return true;
+  } catch (e) {
+    setStatus('perm-camera', false, 'Denied — required to proceed');
+    return false;
+  }
+}
+
+function checkGeo() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      setStatus('perm-geo', false, 'Not supported in this browser');
+      resolve(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const g = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy };
+        setStatus('perm-geo', true, `Captured: ${g.lat.toFixed(3)}, ${g.lng.toFixed(3)} (±${Math.round(g.accuracy)}m)`);
+        resolve(g);
+      },
+      (err) => {
+        setStatus('perm-geo', false, 'Denied — flagged for manual review');
+        resolve(null);
+      },
+      { enableHighAccuracy: false, timeout: 8000 }
+    );
+  });
+}
+
+function captureDevice() {
+  const d = {
+    user_agent: navigator.userAgent,
+    platform: navigator.platform,
+    language: navigator.language,
+    screen: `${screen.width}x${screen.height}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timestamp: new Date().toISOString(),
+  };
+  setStatus('perm-device', true, `${d.platform} · ${d.timezone}`);
+  return d;
+}
+
+(async () => {
+  const okCam = await checkCamera();
+  const geo = await checkGeo();
+  const device = captureDevice();
+  await fetch(`/api/session/${SID}/metadata`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ geo, device })
+  });
+  if (okCam) {
+    document.getElementById('continueBtn').disabled = false;
+  }
+})();
+
+document.getElementById('continueBtn').addEventListener('click', () => {
+  window.location.href = NEXT_URL;
+});
+</script>
+{% endblock %}

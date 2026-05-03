@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Audit trail — Loan Wizard{% endblock %}
+{% block body %}
+<div class="container">
+  <h1>Audit trail</h1>
+  <p class="muted">Every session lands here — video metadata, transcript, decisions, offers, and a SHA-256 integrity hash. Built for V-CIP / DPDP audits.</p>
+
+  <div class="audit-grid">
+    <div class="card session-list">
+      <h3 style="margin: 6px 0 10px">Sessions ({{ sessions|length }})</h3>
+      {% if not sessions %}
+        <div class="tiny muted">No sessions yet. Run a call from the home page to populate this list.</div>
+      {% endif %}
+      {% for s in sessions %}
+        <a href="{{ url_for('audit_detail', sid=s.session_id) }}"
+           class="session-item {% if detail and detail.session_id == s.session_id %}active{% endif %}">
+          <div class="row between">
+            <span class="id">{{ s.session_id }}</span>
+            <span class="tag-decision {{ s.decision or 'pending' }}">{{ s.decision or 'pending' }}</span>
+          </div>
+          <div class="meta">
+            {{ s.created_at }}<br/>
+            {% if s.geo_lat %}📍 {{ '%.3f'|format(s.geo_lat) }}, {{ '%.3f'|format(s.geo_lng) }}{% else %}📍 no geo{% endif %}
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+
+    <div>
+      {% if not detail %}
+        <div class="card">
+          <h3 style="margin-top: 0">Pick a session →</h3>
+          <p class="muted">Select a session on the left to see its full record. Or <a href="{{ url_for('home') }}">start a new one</a>.</p>
+        </div>
+      {% else %}
+        <div class="card">
+          <div class="row between">
+            <div>
+              <h3 style="margin: 0">{{ detail.session_id }}</h3>
+              <div class="tiny">{{ detail.created_at }} → {{ detail.updated_at }} · status <b>{{ detail.status }}</b> · decision <span class="tag-decision {{ detail.decision or 'pending' }}">{{ detail.decision or 'pending' }}</span></div>
+            </div>
+            {% if detail.decision == 'approved' %}
+              <a class="btn" href="{{ url_for('offers_page', sid=detail.session_id) }}">Customer view →</a>
+            {% endif %}
+          </div>
+
+          <div class="audit-section">
+            <h3>Session metadata</h3>
+            <div class="kv">
+              <div class="k">Geo-location</div><div class="v">{% if detail.geo_lat %}{{ detail.geo_lat }}, {{ detail.geo_lng }} (±{{ detail.geo_accuracy or '—' }} m){% else %}—{% endif %}</div>
+              <div class="k">IP</div><div class="v">{{ detail.ip or '—' }}</div>
+              <div class="k">User agent</div><div class="v" style="font-size: 11px">{{ detail.user_agent or '—' }}</div>
+              <div class="k">Consent timestamp</div><div class="v">{{ detail.consent_ts or '—' }}</div>
+              <div class="k">Consent text</div><div class="v">"{{ detail.consent_text or '—' }}"</div>
+            </div>
+          </div>
+
+          <div class="audit-section">
+            <h3>Extracted entities</h3>
+            <pre class="json">{{ detail.entities | prettyjson }}</pre>
+          </div>
+
+          <div class="audit-section">
+            <h3>Computer vision output</h3>
+            <pre class="json">{{ detail.face | prettyjson }}</pre>
+          </div>
+
+          <div class="audit-section">
+            <h3>Risk + policy</h3>
+            {% if detail.policy and detail.policy.violations %}
+              <ul class="flag-list">
+                {% for v in detail.policy.violations %}<li class="violation">{{ v }}</li>{% endfor %}
+                {% for w in detail.policy.warnings %}<li>{{ w }}</li>{% endfor %}
+              </ul>
+            {% else %}
+              <div class="tiny" style="color: var(--green)">All policy gates passed.</div>
+            {% endif %}
+            <h3>Propensity score breakdown</h3>
+            <pre class="json">{{ detail.propensity | prettyjson }}</pre>
+          </div>
+
+          <div class="audit-section">
+            <h3>LLM advisory</h3>
+            <pre class="json">{{ detail.llm | prettyjson }}</pre>
+          </div>
+
+          <div class="audit-section">
+            <h3>Offers generated</h3>
+            <pre class="json">{{ detail.offers | prettyjson }}</pre>
+          </div>
+
+          <div class="audit-section">
+            <h3>Live transcript ({{ detail.transcript|length if detail.transcript else 0 }} lines)</h3>
+            <div class="transcript" style="max-height: 320px">
+              {% for line in detail.transcript or [] %}
+                <div class="line">
+                  <span class="speaker {{ 'customer' if line.speaker == 'customer' else '' }}">{{ line.speaker|upper }}:</span>{{ line.text }}
+                  {% if line.is_consent %}<span class="pill" style="margin-left: 6px; color: var(--gold)">CONSENT</span>{% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="audit-section">
+            <h3>Audit events</h3>
+            <pre class="json">{% for e in detail.events or [] %}{{ e.ts }} · {{ e.event }}
+{% endfor %}</pre>
+          </div>
+
+          <div class="audit-section">
+            <h3>Integrity hash (SHA-256)</h3>
+            <div class="hash">{{ detail.integrity_hash or '—' }}</div>
+            <div class="tiny" style="margin-top: 4px">Re-computed from session payload at finalize time. Tamper-evident.</div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{
+  "_default": {
+    "credit_score": 720,
+    "active_loans": 1,
+    "total_outstanding_inr": 150000,
+    "dpd_30plus_last_12mo": 0,
+    "credit_history_months": 48,
+    "credit_utilization_pct": 32,
+    "enquiries_last_6mo": 2
+  },
+  "high_score_profile": {
+    "credit_score": 790,
+    "active_loans": 0,
+    "total_outstanding_inr": 0,
+    "dpd_30plus_last_12mo": 0,
+    "credit_history_months": 96,
+    "credit_utilization_pct": 18,
+    "enquiries_last_6mo": 1
+  },
+  "thin_file_profile": {
+    "credit_score": 650,
+    "active_loans": 0,
+    "total_outstanding_inr": 0,
+    "dpd_30plus_last_12mo": 0,
+    "credit_history_months": 8,
+    "credit_utilization_pct": 0,
+    "enquiries_last_6mo": 4
+  },
+  "stressed_profile": {
+    "credit_score": 580,
+    "active_loans": 3,
+    "total_outstanding_inr": 480000,
+    "dpd_30plus_last_12mo": 3,
+    "credit_history_months": 60,
+    "credit_utilization_pct": 78,
+    "enquiries_last_6mo": 7
+  }
+}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Welcome — Loan Wizard{% endblock %}
+{% block body %}
+<div class="container narrow">
+  <div class="entry-hero">
+    <h1>A loan in <span class="accent">three minutes</span><br/>over a video call.</h1>
+    <p>
+      Loan Wizard replaces forms with a guided conversation. Eight AI agents listen,
+      verify, score, and generate a personalized offer — before the call ends.
+    </p>
+    <a class="btn primary" href="{{ url_for('start_session') }}">Start my loan call →</a>
+    <div class="entry-channels" style="margin-top: 30px">
+      <span>📩 SMS</span><span>💬 WhatsApp</span><span>✉️ Email</span><span>📢 Campaign</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top: 0">How it works</h2>
+    <div class="grid three">
+      <div>
+        <h3>1. Live video call</h3>
+        <p class="muted">Open the link, allow camera + mic. We capture geo, device, and IP for compliance.</p>
+      </div>
+      <div>
+        <h3>2. Just talk</h3>
+        <p class="muted">Answer six guided questions. Speech-to-text fills the form. Computer vision verifies your face and age.</p>
+      </div>
+      <div>
+        <h3>3. Get your offer</h3>
+        <p class="muted">Up to three personalized loan options with EMI, tenure, and a plain-language explanation.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="color: var(--text-2); margin-top: 0">Trust &amp; compliance</h3>
+    <div class="pill-list">
+      <span class="pill">RBI V-CIP aligned</span>
+      <span class="pill">DPDP Act 2023</span>
+      <span class="pill">Verbal consent capture</span>
+      <span class="pill">End-to-end audit trail</span>
+      <span class="pill">SHA-256 integrity hash</span>
+      <span class="pill">Liveness + age verification</span>
+    </div>
+  </div>
+</div>
+{% endblock %}

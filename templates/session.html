@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Live session — Loan Wizard{% endblock %}
+{% block head %}
+<script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
+{% endblock %}
+{% block body %}
+<div class="container">
+  <div class="row between" style="margin-bottom: 14px">
+    <div>
+      <h1 style="margin-bottom: 2px">Live loan session</h1>
+      <div class="tiny">Session <code>{{ sid }}</code> · LLM provider:
+        <span class="pill {% if llm_status.provider == 'groq' %}green{% else %}amber{% endif %}">
+          {{ llm_status.provider }}{% if llm_status.model %} · {{ llm_status.model }}{% endif %}
+        </span>
+      </div>
+    </div>
+    <div class="tiny">⏱ <span id="timer">00:00</span></div>
+  </div>
+
+  <div class="session-grid">
+    <!-- LEFT: video + conversation -->
+    <div>
+      <div class="video-stage">
+        <video id="vid" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+        <div class="stage-overlay">
+          <span class="tag"><span class="dot"></span> LIVE</span>
+          <span class="tag" id="livenessTag">🔍 Liveness: pending</span>
+        </div>
+        <div class="stage-bottom" id="faceTags"></div>
+      </div>
+
+      <div class="convo">
+        <div class="progress" id="progressBar"></div>
+        <div class="question" id="question">Loading…</div>
+        <div class="response" id="response">Click the mic to start speaking.</div>
+        <div class="actions">
+          <button class="btn primary" id="micBtn">🎙️ Start speaking</button>
+          <button class="btn" id="nextBtn" disabled>Next →</button>
+          <span class="spacer"></span>
+          <button class="btn ghost" id="skipBtn">Skip</button>
+        </div>
+      </div>
+
+      <div class="transcript" id="transcript">
+        <div class="tiny muted">Live transcript appears here…</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: agent pipeline -->
+    <div>
+      <div class="card" style="padding: 16px">
+        <h3 style="margin: 0 0 10px; color: var(--text)">🤖 AI Agent Pipeline</h3>
+        <div class="agents" id="agents"></div>
+      </div>
+
+      <div class="card" style="margin-top: 16px; padding: 16px">
+        <h3 style="margin: 0 0 6px">Live entities</h3>
+        <div class="tiny muted" style="margin-bottom: 10px">Auto-extracted from speech. Click any field to edit if STT mis-heard you.</div>
+        <div class="kv" id="entitiesView">
+          <div class="k">Name</div><div class="v editable" data-k="name" data-type="text" contenteditable="true">—</div>
+          <div class="k">Age (declared)</div><div class="v editable" data-k="age_declared" data-type="number" contenteditable="true">—</div>
+          <div class="k">Employer / Role</div><div class="v editable" data-k="employer" data-type="text" contenteditable="true">—</div>
+          <div class="k">Income (₹/month)</div><div class="v editable" data-k="monthly_income_inr" data-type="number" contenteditable="true">—</div>
+          <div class="k">Loan amount (₹)</div><div class="v editable" data-k="loan_amount_requested_inr" data-type="number" contenteditable="true">—</div>
+          <div class="k">Tenure (months)</div><div class="v editable" data-k="tenure_months" data-type="number" contenteditable="true">—</div>
+          <div class="k">Purpose</div><div class="v editable" data-k="loan_purpose" data-type="text" contenteditable="true">—</div>
+          <div class="k">Consent</div><div class="v" data-k="consent_given">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.SESSION_ID = "{{ sid }}";
+</script>
+<script src="{{ url_for('static', filename='js/session.js') }}"></script>
+{% endblock %}

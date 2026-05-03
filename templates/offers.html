@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Your offers — Loan Wizard{% endblock %}
+{% block body %}
+<div class="container">
+  {% set decision = session.decision %}
+  <div class="decision-banner {{ 'approved' if decision == 'approved' else 'rejected' }}">
+    {% if decision == 'approved' %}
+      <h2>✅ You're approved</h2>
+      <p class="muted">Up to {{ session.offers|length }} personalized offer(s) ready. Choose the one that suits you.</p>
+    {% elif decision == 'rejected' %}
+      <h2>⚠️ We can't proceed automatically</h2>
+      <p class="muted">Your application didn't clear one or more policy gates. See the audit detail below.</p>
+    {% else %}
+      <h2>⚠️ No offer fits the policy DTI cap</h2>
+      <p class="muted">Your declared income doesn't comfortably support an offer under our 50% EMI-to-income ceiling.</p>
+    {% endif %}
+    <div class="tiny" style="margin-top: 6px">
+      Session <code>{{ session.session_id }}</code> · Decision: <b>{{ decision }}</b>
+      · Risk band: <b>{{ session.propensity.band|replace('_',' ') if session.propensity else '—' }}</b>
+      · Propensity: <b>{{ session.propensity.score if session.propensity else '—' }}/100</b>
+    </div>
+  </div>
+
+  {% if session.offers %}
+  <div class="grid three">
+    {% for offer in session.offers %}
+    <div class="offer {% if offer.recommended %}recommended{% endif %}">
+      {% if offer.recommended %}<div class="recommended-badge">Recommended</div>{% endif %}
+      <div class="label">{{ offer.label }}</div>
+      <div class="amount">{{ offer.principal_inr | inr }}</div>
+      <div class="meta">
+        <div><b>{{ offer.tenure_months }} mo</b><span>tenure</span></div>
+        <div><b>{{ offer.interest_rate_pct }}%</b><span>p.a.</span></div>
+        <div><b>{{ offer.emi_inr | inr }}</b><span>EMI</span></div>
+        <div><b>{{ offer.emi_to_income_pct }}%</b><span>of income</span></div>
+      </div>
+      <div class="rationale">{{ offer.rationale }}</div>
+      <div class="tiny" style="margin-top: 10px">
+        Total payable {{ offer.total_payable_inr | inr }} · Total interest {{ offer.total_interest_inr | inr }}
+      </div>
+      <button class="btn primary" style="width: 100%; margin-top: 14px"
+              onclick="alert('Demo: in production this would route to e-sign + KFS.')">
+        Accept this offer →
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if session.policy and session.policy.violations %}
+  <div class="card" style="margin-top: 22px">
+    <h3 style="margin-top: 0">Why we couldn't offer a loan</h3>
+    <ul class="flag-list">
+      {% for v in session.policy.violations %}<li class="violation">{{ v }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <div class="card" style="margin-top: 22px">
+    <h3 style="margin-top: 0">How we got here</h3>
+    <div class="grid two">
+      <div>
+        <h3>Your captured profile</h3>
+        <div class="kv">
+          <div class="k">Name</div><div class="v">{{ session.entities.name or '—' }}</div>
+          <div class="k">Employer / Role</div><div class="v">{{ session.entities.employer or '—' }}</div>
+          <div class="k">Monthly income</div><div class="v">{{ session.entities.monthly_income_inr | inr }}</div>
+          <div class="k">Loan request</div><div class="v">{{ session.entities.loan_amount_requested_inr | inr }}</div>
+          <div class="k">Tenure desired</div><div class="v">{{ (session.entities.tenure_months ~ ' months') if session.entities.tenure_months else '—' }}</div>
+          <div class="k">Purpose</div><div class="v">{{ session.entities.loan_purpose or '—' }}</div>
+          <div class="k">Verbal consent</div><div class="v">{{ '✅ captured' if session.entities.consent_given else '❌ not captured' }}</div>
+          {% if session.face %}
+          <div class="k">Estimated age</div><div class="v">{{ session.face.age_estimated or '—' }}</div>
+          <div class="k">Liveness</div><div class="v">{{ '✅ passed' if session.face.liveness_passed else '❌ failed' }}</div>
+          {% endif %}
+        </div>
+      </div>
+      <div>
+        <h3>LLM advisory</h3>
+        <div class="kv">
+          <div class="k">Persona</div><div class="v">{{ session.llm.persona if session.llm else '—' }}</div>
+          <div class="k">Intent</div><div class="v">{{ session.llm.intent if session.llm else '—' }}</div>
+          <div class="k">Sentiment</div><div class="v">{{ session.llm.sentiment if session.llm else '—' }}</div>
+          <div class="k">Confidence</div><div class="v">{{ session.llm.confidence if session.llm else '—' }}</div>
+          <div class="k">Source</div><div class="v"><span class="pill">{{ session.llm._source if session.llm else '—' }}</span></div>
+        </div>
+        {% if session.llm and session.llm.soft_flags %}
+        <h3 style="margin-top: 14px">Soft signals</h3>
+        <ul class="flag-list">
+          {% for f in session.llm.soft_flags %}<li>{{ f }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 22px">
+    <div class="row between">
+      <div>
+        <h3 style="margin: 0">Audit integrity</h3>
+        <div class="tiny">SHA-256 hash of the entire session. If anyone tampers with the record, this changes.</div>
+      </div>
+      <a href="{{ url_for('audit_detail', sid=session.session_id) }}" class="btn">View full audit log →</a>
+    </div>
+    <div class="hash" style="margin-top: 10px">{{ session.integrity_hash }}</div>
+  </div>
+</div>
+{% endblock %}
