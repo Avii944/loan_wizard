@@ -1,4 +1,4 @@
-# Loan Wizard — Flask Prototype
+# Loan Wizard
 
 End-to-end working prototype of the Agentic AI Video-Call Loan Origination System
 described in Poonawalla Fincorp Problem Statement 3.
@@ -8,6 +8,10 @@ loan offer in under three minutes — implementing every functional requirement
 in the problem statement.
 
 ---
+#🚀 Live Demo
+
+Experience the working prototype of the application here:
+👉 https://web-production-6e0fb.up.railway.app/
 
 ## What it implements (mapped to the problem statement)
 
